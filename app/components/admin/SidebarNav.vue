@@ -13,10 +13,6 @@ const sidebarNavItems: Item[] = [
     title: 'Members',
     href: '/admin/members',
   },
-  {
-    title: 'Settings',
-    href: '/admin/settings',
-  },
 ]
 </script>
 
