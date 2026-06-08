@@ -10,10 +10,7 @@
     "web": true
   },
   "hooks": {
-    "after:release": "echo Successfully released ${name} v${version}",
-    "before:init": [
-      "pnpm lint"
-    ]
+    "after:release": "echo Successfully released ${name} v${version}"
   },
   "npm": {
     "publish": false
