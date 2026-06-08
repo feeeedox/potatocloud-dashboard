@@ -25,7 +25,7 @@ jobs:
         name: Install dependencies
         run: nci
         env:
-          DATABASE_URL: "mysql://root:root@localhost:3306/dummy"
+          DATABASE_URL: 'mysql://root:root@localhost:3306/dummy'
 
       - name: Lint
         run: nr lint --fix

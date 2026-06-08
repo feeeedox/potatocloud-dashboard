@@ -60,14 +60,11 @@ const ws = useWebSocket(`${baseUrl}/ws/screens/${props.screenName}`, {
   },
 })
 
-ws.on("screen:logs:batch", (eventData: ScreenLogDto) => {
-    console.log(eventData)
-    const logBatch = eventData;
-
-    if (eventData.screenName === props.screenName) {
-      logs.value.push(colorizeLog(eventData.line));
-      scrollToBottom();
-    }
+ws.on('screen:logs:batch', (eventData: ScreenLogDto) => {
+  if (eventData.screenName === props.screenName) {
+    logs.value.push(colorizeLog(eventData.line));
+    scrollToBottom();
+  }
 });
 
 async function loadInitialLogs() {
@@ -142,19 +139,20 @@ function colorizeLog(line: string): string {
   )
 
   s = s.replace(
-  /(?:\x1B\[|\[)38;5;(\d+)m(.*?)(?=(?:\x1B\[|\[)(?:0m|38;2;|38;5;)|$)/g,
-  (_, colorCode, text) => {
-    const ansiPalette: Record<string, string> = {
-      '0': '#000000', '1': '#cd0000', '2': '#00cd00', '3': '#cdcd00',
-      '4': '#0000ee', '5': '#cd00cd', '6': '#00cdcd', '7': '#e5e5e5',
-      '8': '#7f7f7f', '9': '#ff0000', '10': '#00ff00', '11': '#ffff00',
-      '12': '#5c5cff', '13': '#ff00ff', '14': '#00ffff', '15': '#ffffff'
-    }
+    // eslint-disable-next-line no-control-regex
+    /(?:\x1B\[|\[)38;5;(\d+)m(.*?)(?=(?:\x1B\[|\[)(?:0m|38;2;|38;5;)|$)/g,
+    (_, colorCode, text) => {
+      const ansiPalette: Record<string, string> = {
+        0: '#000000', 1: '#cd0000', 2: '#00cd00', 3: '#cdcd00',
+        4: '#0000ee', 5: '#cd00cd', 6: '#00cdcd', 7: '#e5e5e5',
+        8: '#7f7f7f', 9: '#ff0000', 10: '#00ff00', 11: '#ffff00',
+        12: '#5c5cff', 13: '#ff00ff', 14: '#00ffff', 15: '#ffffff',
+      }
 
-    const color = ansiPalette[colorCode] || '#ff00ff'; 
-    return `<span style="color:${color}">${text}</span>`;
-  }
-)
+      const color = ansiPalette[colorCode] || '#ff00ff';
+      return `<span style="color:${color}">${text}</span>`;
+    },
+  )
 
   let italic = false
   let underline = false

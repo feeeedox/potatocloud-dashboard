@@ -1,3 +1,4 @@
+import process from 'node:process';
 import tailwindcss from '@tailwindcss/vite';
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -99,7 +100,6 @@ export default defineNuxtConfig({
       inline: ['vue'],
     },
     rollupConfig: {
-      // @ts-ignore
       plugins: [
         {
           name: 'force-vue-named-exports',
@@ -107,13 +107,13 @@ export default defineNuxtConfig({
             if (id.includes('.nuxt/dist/server/server.mjs')) {
               return {
                 code: code.replace('import require$$0, {', 'import {'),
-                map: null
+                map: null,
               };
             }
-          }
-        }
-      ]
-    }
+          },
+        },
+      ],
+    },
   },
 
   compatibilityDate: '2026-03-13',
@@ -124,6 +124,5 @@ export default defineNuxtConfig({
       cloudBaseUrl: process.env.CLOUD_BASE_URL ?? '',
     },
   },
-
 
 })

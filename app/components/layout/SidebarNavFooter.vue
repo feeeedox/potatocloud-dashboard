@@ -6,7 +6,7 @@ defineProps<{
   user: User
 }>()
 
-const { isMobile, setOpenMobile } = useSidebar()
+const { isMobile } = useSidebar()
 
 const { clear, fetch } = useUserSession()
 
@@ -60,7 +60,7 @@ const showModalTheme = ref(false)
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-                    <DropdownMenuItem as-child>
+            <DropdownMenuItem as-child>
               <NuxtLink external target="_blank" to="https://github.com/feeeedox/potatocloud-dashboard">
                 <Icon name="i-lucide-github" />
                 Github Repository

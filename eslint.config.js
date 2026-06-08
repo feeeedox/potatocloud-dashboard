@@ -4,11 +4,12 @@ import withNuxt from './.nuxt/eslint.config.mjs'
 export default withNuxt(
   antfu(
     {
-      ignores: ['prisma/generated/**'],
+      ignores: ['prisma/generated/**', 'docker-compose.yml'],
       formatters: {
         prettier: true,
       },
       rules: {
+        'jsonc/sort-keys': 'off',
         'no-alert': 'off',
         'style/semi': 'off',
         'style/eol-last': 'off',
