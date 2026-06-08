@@ -1,0 +1,43 @@
+{
+  "extends": [
+    "something-vue",
+    "prettier"
+  ],
+  "htmlWhitespaceSensitivity": "ignore",
+  "ifNewline": "consistent",
+  "overrides": [
+    {
+      "files": [
+        "*.vue"
+      ],
+      "options": {
+        "printWidth": 120
+      }
+    },
+    {
+      "files": [
+        "*.ts",
+        "*.tsx"
+      ],
+      "options": {
+        "printWidth": 100
+      }
+    }
+  ],
+  "printWidth": 80,
+  "rules": {
+    "vue/html-self-closing": [
+      "error",
+      {
+        "html": {
+          "void": "any"
+        }
+      }
+    ]
+  },
+  "singleAttributePerLine": false,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "trailingComma": "all",
+  "useTabs": false
+}
