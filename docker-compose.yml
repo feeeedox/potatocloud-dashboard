@@ -9,10 +9,10 @@ services:
       - .env
     environment:
       - NODE_ENV=production
-      - NUXT_SESSION_PASSWORD=${NUXT_SESSION_PASSWORD}
-      - DATABASE_URL=${DATABASE_URL}
-      - NUXT_CLOUD_TOKEN=${NUXT_CLOUD_TOKEN}
-      - NUXT_PUBLIC_CLOUD_BASE_URL=${NUXT_PUBLIC_CLOUD_BASE_URL}
-      - WS_BASE_URL=${WS_BASE_URL}
-      - WS_API_KEY=${WS_API_KEY}
-      - JWT_SECRET=${JWT_SECRET}
+      - NUXT_SESSION_PASSWORD=${NUXT_SESSION_PASSWORD} # This should be a long, random string for encrypting session data
+      - DATABASE_URL=${DATABASE_URL} # Connection string for your database (e.g., PostgreSQL, MySQL)
+      - NUXT_CLOUD_TOKEN=${NUXT_CLOUD_TOKEN} # REST API Key from the webinterface-module 
+      - NUXT_PUBLIC_CLOUD_BASE_URL=${NUXT_PUBLIC_CLOUD_BASE_URL} # Base URL for the webinterface-module API (e.g., https://localhost:8080)
+      - WS_BASE_URL=${WS_BASE_URL} # Base URL for the WebSocket server (e.g., http://localhost:8080)
+      - WS_API_KEY=${WS_API_KEY} # API key for authenticating with the WebSocket server 
+      - JWT_SECRET=${JWT_SECRET} # Secret key for signing JWT tokens, should be the same as the one used in the webinterface-module
