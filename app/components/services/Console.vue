@@ -143,13 +143,25 @@ function colorizeLog(line: string): string {
     /(?:\x1B\[|\[)38;5;(\d+)m(.*?)(?=(?:\x1B\[|\[)(?:0m|38;2;|38;5;)|$)/g,
     (_, colorCode, text) => {
       const ansiPalette: Record<string, string> = {
-        0: '#000000', 1: '#cd0000', 2: '#00cd00', 3: '#cdcd00',
-        4: '#0000ee', 5: '#cd00cd', 6: '#00cdcd', 7: '#e5e5e5',
-        8: '#7f7f7f', 9: '#ff0000', 10: '#00ff00', 11: '#ffff00',
-        12: '#5c5cff', 13: '#ff00ff', 14: '#00ffff', 15: '#ffffff',
+        0: '#2d3436',
+        1: '#ff6b6b',
+        2: '#7ed6df',
+        3: '#f9ca24',
+        4: '#686de0',
+        5: '#e056fd',
+        6: '#00ced1',
+        7: '#dfe6e9',
+        8: '#95afc0',
+        9: '#ff7675',
+        10: '#95e3e6',
+        11: '#ffeaa7',
+        12: '#a29bfe',
+        13: '#f8c291',
+        14: '#81ecec',
+        15: '#ffffff',
       }
 
-      const color = ansiPalette[colorCode] || '#ff00ff';
+      const color = ansiPalette[colorCode] || '#f368e0';
       return `<span style="color:${color}">${text}</span>`;
     },
   )
@@ -348,7 +360,6 @@ onUnmounted(() => {
   flex: 1;
   overflow-y: auto;
   padding: 12px 16px;
-  /* Prevent layout thrashing from reflows while new lines arrive */
   contain: strict;
 }
 
@@ -383,11 +394,9 @@ onUnmounted(() => {
   color: #c8c8c8;
   white-space: pre-wrap;
   word-break: break-all;
-  /* Tell the browser each line is independent — reduces reflow scope */
   contain: content;
 }
 
-/* Short class names avoid extra string work in colorizeLog */
 .log-line :deep(.lt) {
   color: #555;
 }
