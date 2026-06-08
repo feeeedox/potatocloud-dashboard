@@ -11,6 +11,8 @@ async function stopService() {
     await $fetch(`/api/cloud/service/${serviceId.value}/stop`, {
       method: 'POST',
     })
+
+    window.location.reload()
   }
   catch (e) {
     console.error('Stop failed', e)
