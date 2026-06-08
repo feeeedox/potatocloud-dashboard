@@ -33,6 +33,7 @@
     "@nuxthub/core": "0.10.7",
     "@nuxtjs/color-mode": "^4.0.0",
     "@pinia/nuxt": "^0.11.3",
+    "@release-it/conventional-changelog": "^11.0.1",
     "@vee-validate/zod": "^4.15.1",
     "@vueuse/core": "^14.3.0",
     "@vueuse/math": "^14.3.0",
