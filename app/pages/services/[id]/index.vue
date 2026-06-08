@@ -7,7 +7,6 @@ const serviceId = computed(() => route.params.id as string)
 const loading = ref(true)
 
 async function stopService() {
-  if (!confirm(`Stop service ${serviceId.value}?`)) return
   try {
     await $fetch(`/api/cloud/service/${serviceId.value}/stop`, {
       method: 'POST',
@@ -66,15 +65,30 @@ const { serviceData } = useCloudService(serviceId.value)
       </div>
 
       <div class="flex items-center gap-2">
-        <Button
-          size="sm"
-          variant="destructive"
-          :disabled="serviceData?.serviceStatus === 'STOPPED' || serviceData?.serviceStatus === 'STOPPING'"
-          @click="stopService"
-        >
-          <Icon class="h-3.5 w-3.5 mr-1.5" name="lucide:square" />
-          Stop
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger as-child>
+            <Button
+              size="sm"
+              variant="destructive"
+              :disabled="serviceData?.serviceStatus === 'STOPPED' || serviceData?.serviceStatus === 'STOPPING'"
+            >
+              <Icon class="h-3.5 w-3.5 mr-1.5" name="lucide:square" />
+              Stop
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will immediately stop the service and disconnect all players.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction @click="stopService">Stop Service</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
 
