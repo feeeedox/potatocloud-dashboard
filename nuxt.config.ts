@@ -38,6 +38,11 @@ export default defineNuxtConfig({
     },
   ],
 
+  nuxtQuery: {
+    autoImports: ['useQuery', 'useMutation', 'useQueryClient'],
+    devtools: true,
+  },
+
   modules: [
     'shadcn-nuxt',
     '@vueuse/nuxt',
@@ -48,6 +53,7 @@ export default defineNuxtConfig({
     '@nuxt/fonts',
     '@nuxthub/core',
     'nuxt-auth-utils',
+    '@peterbud/nuxt-query',
   ],
 
   shadcn: {
