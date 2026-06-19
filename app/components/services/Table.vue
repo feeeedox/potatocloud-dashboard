@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { ColumnDef, ColumnFiltersState, ExpandedState, SortingState, VisibilityState } from '@tanstack/vue-table'
-import type { CloudService } from '~/types/cloud'
+import type { ApiService } from '~/client/generated'
 import { Icon } from '@iconify/vue'
 import {
   FlexRender,
@@ -18,6 +18,7 @@ import { h, ref } from 'vue'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -26,7 +27,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { formatMillisToTime, valueUpdater } from '@/lib/utils'
+import { formatSecondsToTime, valueUpdater } from '@/lib/utils'
 import { useCloudServices } from '~/composables/useCloudServices'
 
 export interface ServiceStatus {
@@ -43,17 +44,17 @@ const [DefineTemplate] = createReusableTemplate<{
   onExpand: () => void
 }>()
 
-const columns: ColumnDef<CloudService>[] = [
+const columns: ColumnDef<ApiService>[] = [
   {
-    accessorKey: 'service',
+    accessorKey: 'name',
     header: 'Server',
-    cell: ({ row }) => h('div', { class: 'font-mono' }, row.getValue('service')),
+    cell: ({ row }) => h('div', { class: 'font-mono' }, row.getValue('name')),
   },
   {
-    accessorKey: 'serviceStatus',
+    accessorKey: 'state',
     header: 'Status',
     cell: ({ row }) => {
-      const status = row.getValue('serviceStatus') as string
+      const status = row.getValue('state') as string
       const statusConfig = {
         RUNNING: { icon: 'i-lucide-play-circle', color: 'text-green-500' },
         STARTING: { icon: 'i-lucide-loader-2', color: 'text-yellow-500', animate: true },
@@ -75,7 +76,7 @@ const columns: ColumnDef<CloudService>[] = [
     },
   },
   {
-    accessorKey: 'players',
+    accessorKey: 'playerCount',
     header: ({ column }) => {
       return h(Button, {
         variant: 'ghost',
@@ -84,14 +85,14 @@ const columns: ColumnDef<CloudService>[] = [
       }, () => ['Players', h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })])
     },
     cell: ({ row }) => {
-      return h('div', { class: 'font-medium' }, `${row.original.playerCount} / ${row.original.maxPlayerCount}`)
+      return h('div', { class: 'font-medium' }, `${row.original.playerCount} / ${row.original.maxPlayers}`)
     },
   },
   {
     accessorKey: 'uptime',
     header: () => h('div', { class: 'text-right' }, 'Uptime'),
     cell: ({ row }) => {
-      return h('div', { class: 'font-medium text-right' }, formatMillisToTime(row.original.uptime))
+      return h('div', { class: 'font-medium text-right' }, formatSecondsToTime(Number(row.original.uptime)))
     },
   },
 ]
@@ -128,6 +129,8 @@ const table = useVueTable({
 function copy(id: string) {
   navigator.clipboard.writeText(id)
 }
+
+const router = useRouter()
 </script>
 
 <template>
@@ -153,10 +156,10 @@ function copy(id: string) {
   <div class="w-full">
     <div class="flex items-center py-4">
       <Input
-        :model-value="table.getColumn('service')?.getFilterValue() as string"
+        :model-value="table.getColumn('name')?.getFilterValue() as string"
         class="max-w-sm"
         placeholder="Search service..."
-        @update:model-value=" table.getColumn('service')?.setFilterValue($event)"
+        @update:model-value=" table.getColumn('name')?.setFilterValue($event)"
       />
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
@@ -191,7 +194,7 @@ function copy(id: string) {
         <TableBody>
           <template v-if="table.getRowModel().rows?.length">
             <template v-for="row in table.getRowModel().rows" :key="row.id">
-              <TableRow :data-state="row.getIsSelected() && 'selected'" class="cursor-pointer" @click="navigateTo(`/services/${row.original.service}`)">
+              <TableRow :data-state="row.getIsSelected() && 'selected'" class="cursor-pointer" @click="router.push(`/services/${row.original.name}`)">
                 <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
                   <FlexRender :props="cell.getContext()" :render="cell.column.columnDef.cell" />
                 </TableCell>

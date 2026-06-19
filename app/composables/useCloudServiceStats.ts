@@ -1,24 +1,26 @@
-import type { CloudServiceStats } from '~/types/cloud'
+import type { ApiServiceStats, GetApiV1StatsServicesResponse } from '~/client/generated';
 import type { WsStatus } from '~/types/websocket'
 import { ref } from 'vue'
+import { getApiV1StatsServices } from '~/client/generated'
 import { useWebSocket } from './useWebSocket'
 
 export function useCloudServiceStats() {
   const config = useRuntimeConfig()
   const baseUrl = config.public.cloudBaseUrl
 
-  const stats = ref<CloudServiceStats>()
+  const wsStats = ref<ApiServiceStats>()
   const status = ref<WsStatus>('connecting')
 
-  const fetchInitialStats = async () => {
-    try {
-      const res = await fetch(`/api/cloud/stats/services`)
-      stats.value = await res.json()
+  const { data: httpStats } = useCloudQuery<GetApiV1StatsServicesResponse>(getApiV1StatsServices, 'stats-services')
+
+  const stats = computed<ApiServiceStats>(() => {
+    return wsStats.value ?? httpStats.value ?? {
+      currentMemoryUsage: 0,
+      running: 0,
+      starting: 0,
+      stopping: 0,
     }
-    catch (e) {
-      console.error('Failed to fetch initial stats', e)
-    }
-  }
+  })
 
   const ws = useWebSocket(`${baseUrl}/ws/stats/services`, {
     onOpen: () => { status.value = 'connected' },
@@ -27,11 +29,7 @@ export function useCloudServiceStats() {
   })
 
   ws.on('stats_update', (data) => {
-    stats.value = data
-  })
-
-  onMounted(() => {
-    fetchInitialStats().then(r => void r)
+    wsStats.value = data
   })
 
   return {

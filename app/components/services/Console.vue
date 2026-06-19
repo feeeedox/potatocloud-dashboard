@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { getApiV1ScreensByNameLogs } from '~/client/generated';
 import { useWebSocket } from '~/composables/useWebSocket';
 
 interface ScreenLogDto {
@@ -69,10 +70,18 @@ ws.on('screen:logs:batch', (eventData: ScreenLogDto) => {
 
 async function loadInitialLogs() {
   try {
-    const data = await $fetch<{ screen: string, logs: string[] }>(`/api/cloud/screen/${props.screenName}`)
-    if (data?.logs && data.logs.length > 0) {
-      const slice = data.logs.slice(-MAX_RENDERED_LINES)
+    const response = await getApiV1ScreensByNameLogs({
+      path: {
+        name: props.screenName,
+      },
+    })
+
+    const logsData = response?.logs
+
+    if (logsData && logsData.length > 0) {
+      const slice = logsData.slice(-MAX_RENDERED_LINES)
       logs.value = slice.map(colorizeLog)
+
       await nextTick()
       scrollToBottom()
     }
@@ -251,14 +260,14 @@ onUnmounted(() => {
       <input
         ref="inputRef"
         v-model="commandInput"
-        class="console-input"
         :placeholder="`Send command to ${screenName}...`"
-        spellcheck="false"
         autocomplete="off"
+        class="console-input"
+        spellcheck="false"
         @keydown="handleKeydown"
         @keydown.enter="sendCommand"
       />
-      <button class="send-btn" :disabled="!commandInput.trim()" @click="sendCommand">
+      <button :disabled="!commandInput.trim()" class="send-btn" @click="sendCommand">
         <Icon class="h-4 w-4" name="lucide:send" />
       </button>
     </div>

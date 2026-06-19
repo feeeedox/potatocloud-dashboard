@@ -19,7 +19,9 @@ async function stopService() {
   }
 }
 
-function getStatusColor(status: string) {
+function getStatusColor(statusObj: { [key: string]: unknown } | undefined) {
+  const status = (statusObj?.name || statusObj || 'UNKNOWN').toString().toUpperCase()
+
   const map: Record<string, string> = {
     RUNNING: 'text-emerald-400',
     STARTING: 'text-yellow-400',
@@ -27,10 +29,12 @@ function getStatusColor(status: string) {
     STOPPED: 'text-muted-foreground',
     PREPARING: 'text-blue-400',
   }
-  return map[status?.toUpperCase()] ?? 'text-muted-foreground'
+  return map[status] ?? 'text-muted-foreground'
 }
 
-function getStatusDot(status: string) {
+function getStatusDot(statusObj: { [p: string]: unknown } | undefined) {
+  const status = (statusObj?.name || statusObj || 'UNKNOWN').toString().toUpperCase()
+
   const map: Record<string, string> = {
     RUNNING: 'bg-emerald-400',
     STARTING: 'bg-yellow-400',
@@ -38,7 +42,7 @@ function getStatusDot(status: string) {
     STOPPED: 'bg-neutral-600',
     PREPARING: 'bg-blue-400',
   }
-  return map[status?.toUpperCase()] ?? 'bg-neutral-600'
+  return map[status] ?? 'bg-neutral-600'
 }
 
 const { serviceData } = useCloudService(serviceId.value)
@@ -53,12 +57,12 @@ const { serviceData } = useCloudService(serviceId.value)
         </h2>
         <p class="text-sm text-muted-foreground mt-0.5 flex items-center gap-2">
           <template v-if="serviceData">
-            <span :class="getStatusDot(serviceData.serviceStatus)" class="inline-block w-2 h-2 rounded-full" />
-            <span :class="getStatusColor(serviceData.serviceStatus)" class="font-medium capitalize">
-              {{ serviceData.serviceStatus }}
+            <span :class="getStatusDot(serviceData.state)" class="inline-block w-2 h-2 rounded-full" />
+            <span :class="getStatusColor(serviceData.state)" class="font-medium capitalize">
+              {{ serviceData.state }}
             </span>
             <span class="text-muted-foreground/50">·</span>
-            <span>{{ formatMillisToTime(serviceData.uptime) }} uptime</span>
+            <span>{{ formatSecondsToTime(Number(serviceData.uptime)) }} uptime</span>
           </template>
           <template v-else-if="loading">
             <span class="text-muted-foreground/60">Loading...</span>
@@ -72,7 +76,6 @@ const { serviceData } = useCloudService(serviceId.value)
             <Button
               size="sm"
               variant="destructive"
-              :disabled="serviceData?.serviceStatus === 'STOPPED' || serviceData?.serviceStatus === 'STOPPING'"
             >
               <Icon class="h-3.5 w-3.5 mr-1.5" name="lucide:square" />
               Stop
@@ -106,7 +109,7 @@ const { serviceData } = useCloudService(serviceId.value)
           <CardTitle class="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             <template v-if="serviceData">
               {{ serviceData.playerCount }}
-              <span class="text-sm font-normal text-muted-foreground">/ {{ serviceData.maxPlayerCount }}</span>
+              <span class="text-sm font-normal text-muted-foreground">/ {{ serviceData.maxPlayers }}</span>
             </template>
             <template v-else>
               <span class="text-muted-foreground text-xl">—</span>
@@ -123,7 +126,7 @@ const { serviceData } = useCloudService(serviceId.value)
           </CardDescription>
           <CardTitle class="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl font-mono">
             <template v-if="serviceData">
-              {{ formatMillisToTime(serviceData.uptime) }}
+              {{ formatSecondsToTime(Number(serviceData.uptime)) }}
             </template>
             <template v-else>
               <span class="text-muted-foreground text-xl">—</span>
@@ -140,9 +143,9 @@ const { serviceData } = useCloudService(serviceId.value)
           </CardDescription>
           <CardTitle class="text-2xl font-semibold @[250px]/card:text-3xl">
             <template v-if="serviceData">
-              <span :class="getStatusColor(serviceData.serviceStatus)" class="flex items-center gap-2">
-                <span :class="getStatusDot(serviceData.serviceStatus)" class="w-2.5 h-2.5 rounded-full" />
-                {{ serviceData.serviceStatus }}
+              <span :class="getStatusColor(serviceData.state)" class="flex items-center gap-2">
+                <span :class="getStatusDot(serviceData.state)" class="w-2.5 h-2.5 rounded-full" />
+                {{ serviceData.state }}
               </span>
             </template>
             <template v-else>
@@ -159,8 +162,8 @@ const { serviceData } = useCloudService(serviceId.value)
             Fill Rate
           </CardDescription>
           <CardTitle class="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            <template v-if="serviceData && serviceData.maxPlayerCount > 0">
-              {{ Math.round((serviceData.playerCount / serviceData.maxPlayerCount) * 100) }}%
+            <template v-if="serviceData && serviceData.maxPlayers!! > 0">
+              {{ Math.round((serviceData.playerCount!! / serviceData.maxPlayers!!) * 100) }}%
             </template>
             <template v-else>
               <span class="text-muted-foreground text-xl">—</span>

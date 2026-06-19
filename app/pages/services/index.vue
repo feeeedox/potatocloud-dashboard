@@ -26,7 +26,7 @@ const { stats } = useCloudServiceStats()
           <CardTitle class="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             <NumberFlow
               v-if="stats"
-              :value="stats.running"
+              :value="stats.running!!"
             />
           </CardTitle>
         </CardHeader>
@@ -37,7 +37,7 @@ const { stats } = useCloudServiceStats()
           <CardTitle class="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             <NumberFlow
               v-if="stats"
-              :value="stats.starting"
+              :value="stats.starting!!"
             />
           </CardTitle>
         </CardHeader>
@@ -48,7 +48,7 @@ const { stats } = useCloudServiceStats()
           <CardTitle class="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             <NumberFlow
               v-if="stats"
-              :value="stats.stopping"
+              :value="stats.stopping!!"
             />
           </CardTitle>
         </CardHeader>
@@ -59,7 +59,7 @@ const { stats } = useCloudServiceStats()
           <CardTitle class="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             <NumberFlow
               v-if="stats"
-              :value="stats.currentMemoryUsage"
+              :value="stats.currentMemoryUsage!!"
             />
             <span class="text-sm text-muted-foreground">
               / MB

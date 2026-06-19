@@ -1,21 +1,16 @@
 <script lang="ts" setup>
+import type { GetApiV1StatsSummaryResponse } from '~/client/generated';
 import NumberFlow from '@number-flow/vue'
+import { getApiV1StatsSummary } from '~/client/generated';
 
-const dataCard = ref({
-  uptime: '',
-  groups: 0,
-  services: 0,
-  onlinePlayers: 0,
-})
+const { data } = useCloudQuery<GetApiV1StatsSummaryResponse>(getApiV1StatsSummary, `cloud-stats`)
 
-const { data } = await useFetch('/api/cloud/stats')
-
-onMounted(() => {
-  dataCard.value.uptime = data.value?.formattedUptime ?? '0s'
-  dataCard.value.groups = data.value?.groups ?? 0
-  dataCard.value.services = data.value?.services ?? 0
-  dataCard.value.onlinePlayers = data.value?.onlinePlayers ?? 0
-})
+const dataCard = computed(() => ({
+  uptime: formatMillisToTime(Number(data.value?.uptime)) ?? '0s',
+  groups: data.value?.groups ?? 0,
+  services: data.value?.services ?? 0,
+  onlinePlayers: data.value?.playerCount ?? 0,
+}))
 
 const timeRange = ref('30d')
 
@@ -86,7 +81,7 @@ watch(isDesktop, () => {
             <span class="hidden @[540px]/card:block">
               Joins in the last 24 hours.
               <span class="text-xs text-muted-foreground font-semibold">
-                (Data is being cleared after the cloud restarts)
+                (WIP: The current implementation is just shit, will be improved in the future)
               </span>
             </span>
           </CardDescription>

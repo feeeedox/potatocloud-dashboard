@@ -1,5 +1,5 @@
 import type { ApiPlayer } from '~/client/generated'
-import type { CloudGroup, CloudService, CloudServiceStats } from '~/types/cloud'
+import type { CloudGroup } from '~/types/cloud'
 
 export interface ScreenLogEvent {
   screenName: string
@@ -40,13 +40,13 @@ export interface WsGroupPayload {
 export interface WsEventMap {
   'screen:logs:batch': ScreenLogDto
   'screen:list': ScreenListResponse
-  'service_update': CloudService
+  'service_update': ApiService
 
   'player_update': ApiPlayer[]
   'groups_update': ApiGroup[]
   'group_details': CloudGroup
-  'stats_update': CloudServiceStats
-  'service_updates': CloudService[]
+  'stats_update': ApiStats
+  'service_updates': ApiService[]
   'pong': null
   'error': string
 }

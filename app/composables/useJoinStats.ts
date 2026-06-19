@@ -1,65 +1,39 @@
-// composables/useJoinStats.ts
-//
-// Drop-in für den chartData-Block in deinem bestehenden Chart-Component.
-// Liefert das gleiche Array-Format wie dein hardcoded chartData,
-// aber live vom PotatoCloud REST-Modul.
-//
-// Verwendung:
-//   const { chartData, refresh, pending } = useJoinStats()
+import type { GetApiV1StatsJoinsResponse } from '~/client/generated'
+import { computed, onUnmounted } from 'vue'
+import { getApiV1StatsJoins } from '~/client/generated'
 
-export interface HourlyJoins {
-  hour: string // "14:00"
-  joins: number
-}
-
-export interface JoinStatsResponse {
-  total: number
-  data: HourlyJoins[]
-}
+// todo: this is shit, create a endpoint for the website and let the backend send information about joins here, and display them)
 
 export function useJoinStats() {
-  const raw = ref<JoinStatsResponse | null>(null)
-  const pending = ref(false)
-  const error = ref<string | null>(null)
-
-  const refresh = async () => {
-    pending.value = true
-    error.value = null
-    try {
-      raw.value = await $fetch<JoinStatsResponse>(
-        `/api/cloud/stats/joins`,
-      )
-    }
-    catch (e: any) {
-      error.value = e?.message ?? String(e)
-    }
-    finally {
-      pending.value = false
-    }
-  }
+  const { data, error } = useCloudQuery<GetApiV1StatsJoinsResponse>(
+    getApiV1StatsJoins,
+    `join-stats`,
+  )
 
   const chartData = computed(() => {
-    if (!raw.value)
+    const statsData = data.value?.data
+
+    if (!statsData || !Array.isArray(statsData))
       return []
-    return raw.value.data.map(entry => ({
-      date: entry.hour,
-      joins: entry.joins,
+
+    return statsData.map(entry => ({
+      date: entry.hour ?? '',
+      joins: entry.joins ?? 0,
     }))
   })
 
-  const totalJoins = computed(() => raw.value?.total ?? 0)
+  const totalJoins = computed(() => data.value?.total ?? 0)
 
-  let interval: ReturnType<typeof setInterval> | null = null
-
-  onMounted(() => {
-    refresh()
-    interval = setInterval(refresh, 60_000)
-  })
+  const interval: ReturnType<typeof setInterval> | null = null
 
   onUnmounted(() => {
     if (interval)
       clearInterval(interval)
   })
 
-  return { chartData, totalJoins, refresh, pending, error }
+  return {
+    chartData,
+    totalJoins,
+    error: computed(() => error.value ? String(error.value) : null),
+  }
 }
