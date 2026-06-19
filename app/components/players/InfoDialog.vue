@@ -1,34 +1,24 @@
 <script lang="ts" setup>
-import type { CloudPlayer } from '~/types/cloud'
+import type { ApiPlayer } from '~/client/generated'
 import { Info } from 'lucide-vue-next'
 import { Button } from '~/components/ui/button'
 
 const props = defineProps({
   player: {
-    type: Object as () => CloudPlayer,
+    type: Object as () => ApiPlayer,
     required: true,
   },
 })
 
-// username: string
-// uniqueId: string
-// connectedProxyId: number
-// connectedServerId: number
-// connectedProxyName: string
-// connectedServerName: string
-// serverGroupDto: CloudGroup
-// proxyGroupDto: CloudGroup
-// properties: CloudProperty[]
-
 const fields = [
   { label: 'Username', value: props.player.username },
   { label: 'UUID', value: props.player.uniqueId },
-  { label: 'Connected Proxy Id', value: props.player?.connectedProxyId },
-  { label: 'Connected Server Id', value: props.player?.connectedServerId },
-  { label: 'Connected Proxy Name', value: props.player?.connectedProxyName },
-  { label: 'Connected Server Name', value: props.player?.connectedServerName },
-  { label: 'Server Group', value: props.player?.serverGroupDto?.name },
-  { label: 'Proxy Group', value: props.player?.proxyGroupDto?.name },
+  { label: 'Connected Proxy Id', value: props.player?.proxyId },
+  { label: 'Connected Server Id', value: props.player?.serverId },
+  { label: 'Connected Proxy Name', value: props.player?.proxyName },
+  { label: 'Connected Server Name', value: props.player?.serverName },
+  { label: 'Server Group', value: props.player?.serverGroup },
+  { label: 'Proxy Group', value: props.player?.proxyGroup },
 ]
 </script>
 

@@ -13,5 +13,6 @@ export default defineConfig({
     '@hey-api/typescript',
     '@hey-api/sdk',
     '@tanstack/vue-query',
+    'zod',
   ],
 });

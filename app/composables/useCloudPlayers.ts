@@ -1,24 +1,21 @@
-import type { CloudPlayer } from '~/types/cloud'
+import type { ApiPlayer, GetApiV1PlayersResponse } from '~/client/generated';
 import type { WsStatus } from '~/types/websocket'
 import { ref } from 'vue'
+import { getApiV1Players } from '~/client/generated';
 import { useWebSocket } from './useWebSocket'
 
 export function useCloudPlayers() {
   const config = useRuntimeConfig()
   const baseUrl = config.public.cloudBaseUrl
 
-  const players = ref<CloudPlayer[]>([])
+  const wsPlayers = ref<ApiPlayer[] | null>(null)
   const status = ref<WsStatus>('connecting')
 
-  const fetchInitialPlayers = async () => {
-    try {
-      const res = await fetch(`/api/cloud/player`)
-      players.value = await res.json()
-    }
-    catch (e) {
-      console.error('Failed to fetch initial players', e)
-    }
-  }
+  const { data: httpPlayers } = useCloudQuery<GetApiV1PlayersResponse>(getApiV1Players, 'players')
+
+  const players = computed<ApiPlayer[]>(() => {
+    return wsPlayers.value ?? httpPlayers.value ?? []
+  })
 
   const ws = useWebSocket(`${baseUrl}/ws/players/live`, {
     onOpen: () => { status.value = 'connected' },
@@ -27,11 +24,7 @@ export function useCloudPlayers() {
   })
 
   ws.on('player_update', (data) => {
-    players.value = data
-  })
-
-  onMounted(() => {
-    fetchInitialPlayers().then(r => void r)
+    wsPlayers.value = data
   })
 
   return {

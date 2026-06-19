@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import type { CloudGroup } from '~/types/cloud'
+import type { ApiGroup } from '~/client/generated';
 
 const props = defineProps<{
-  group: CloudGroup
+  group: ApiGroup
   isProxy?: boolean
 }>()
 
@@ -136,7 +136,7 @@ function drawPattern(canvas: HTMLCanvasElement, p: string, c1: string, c2: strin
 onMounted(() => {
   if (!canvasRef.value)
     return
-  const { p, c1, c2 } = getTheme(props.group.name)
+  const { p, c1, c2 } = getTheme(props.group.name || '')
   drawPattern(canvasRef.value, p, c1, c2)
 })
 </script>
@@ -158,14 +158,14 @@ onMounted(() => {
       >
         <div
           :class="{
-            'bg-emerald-500/85': group.onlineServicesCount >= group.maxOnlineCount,
-            'bg-orange-400/90': group.onlineServicesCount > 0 && group.onlineServicesCount < group.maxOnlineCount,
+            'bg-emerald-500/85': group.onlineServicesCount!! >= group.maxServices!!,
+            'bg-orange-400/90': group.onlineServicesCount!! > 0 && group.onlineServicesCount!! < group.maxServices!!,
             'bg-neutral-600/70 ': group.onlineServicesCount === 0,
           }"
           class="size-2 rounded-full"
         />
         <span class="text-white">
-          {{ group.onlineServicesCount }} / {{ group.maxOnlineCount }}
+          {{ group.onlineServicesCount }} / {{ group.maxServices }}
         </span>
       </span>
     </div>
@@ -180,7 +180,7 @@ onMounted(() => {
           <Icon class="h-3.5 w-3.5 text-muted-foreground" name="lucide:users" />
           <div>
             <p class="text-xs font-semibold tabular-nums">
-              {{ group.onlinePlayerCount }} / {{ group.maxPlayerCount }}
+              {{ group.onlinePlayerCount }} / {{ group.maxPlayers }}
             </p>
             <p class="text-[10px] text-muted-foreground leading-tight">
               Players
@@ -202,10 +202,10 @@ onMounted(() => {
 
       <div class="flex items-center justify-between border-t border-border/50 pt-2 text-[11px] text-muted-foreground">
         <div class="flex items-center gap-1.5">
-          <Icon :name="group.platform.proxy ? 'lucide:network' : 'lucide:file-code-2'" class="h-3 w-3" />
-          <span>{{ group.platform.name }}</span>
+          <Icon :name="group.platform?.proxy ? 'lucide:network' : 'lucide:file-code-2'" class="h-3 w-3" />
+          <span>{{ group.platform?.name }}</span>
         </div>
-        <span class="font-mono text-[10px]">{{ group.platformVersion.name }}</span>
+        <span class="font-mono text-[10px]">{{ group.platformVersion?.name }}</span>
       </div>
     </div>
   </div>

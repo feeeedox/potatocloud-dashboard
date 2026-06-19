@@ -1,24 +1,21 @@
-import type { CloudGroup } from '~/types/cloud'
+import type { GetApiV1GroupsDetailsResponse } from '~/client/generated';
 import type { WsStatus } from '~/types/websocket'
 import { ref } from 'vue'
+import { getApiV1GroupsDetails } from '~/client/generated';
 import { useWebSocket } from './useWebSocket'
 
 export function useCloudGroups() {
   const config = useRuntimeConfig()
   const baseUrl = config.public.cloudBaseUrl
 
-  const groups = ref<CloudGroup[]>([])
+  const wsGroups = ref<ApiGroup[] | null>(null)
   const status = ref<WsStatus>('connecting')
 
-  const fetchInitialGroups = async () => {
-    try {
-      const res = await fetch(`/api/cloud/group`)
-      groups.value = await res.json()
-    }
-    catch (e) {
-      console.error('Failed to fetch initial players', e)
-    }
-  }
+  const { data: httpGroups, isPending } = useCloudQuery<GetApiV1GroupsDetailsResponse>(getApiV1GroupsDetails, 'groups')
+
+  const groups = computed<ApiGroup[]>(() => {
+    return wsGroups.value ?? httpGroups.value ?? []
+  })
 
   const ws = useWebSocket(`${baseUrl}/ws/groups`, {
     onOpen: () => { status.value = 'connected' },
@@ -27,14 +24,11 @@ export function useCloudGroups() {
   })
 
   ws.on('groups_update', (data) => {
-    groups.value = data
-  })
-
-  onMounted(() => {
-    fetchInitialGroups().then(r => void r)
+    wsGroups.value = data
   })
 
   return {
+    isPending,
     groups,
     status: ws.status,
     disconnect: ws.disconnect,

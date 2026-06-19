@@ -1,32 +1,34 @@
 <script lang="ts" setup>
-import type { CloudPlatform, CloudProperty } from '~/types/cloud'
+import type {
+  ApiProperty,
+  GetApiV1PlatformsByNameResponse,
+  GetApiV1PlatformsResponse,
+  GroupCreateRequest,
+} from '~/client/generated';
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import { createGroupSchema } from '~/lib/schemas'
+import { toast } from 'vue-sonner';
+import { getApiV1Platforms, getApiV1PlatformsByName } from '~/client/generated';
+import { postApiV1GroupsMutation } from '~/client/generated/@tanstack/vue-query.gen';
 
-const { data: platforms } = await useFetch<CloudPlatform[]>(
-  '/api/cloud/platform',
-  {
-    default: () => [],
-  },
-)
+const { data: platforms } = useCloudQuery<GetApiV1PlatformsResponse>(getApiV1Platforms, 'platforms')
 
-const { handleSubmit, errors, defineField, isSubmitting, resetForm } = useForm({
-  validationSchema: toTypedSchema(createGroupSchema),
+const { handleSubmit, errors, defineField, resetForm } = useForm<GroupCreateRequest>({
+  validationSchema: toTypedSchema(newCreateGroupSchema),
   initialValues: {
     name: '',
     platform: '',
     platformVersion: '',
-    minOnlineCount: 1,
-    maxOnlineCount: 1,
+    minServices: 1,
+    maxServices: 1,
     maxPlayerCount: 100,
     maxMemory: 1024,
     fallback: false,
-    static: false,
+    staticServices: false,
     useModernVelocityForwarding: false,
     startPriority: 1,
-    newServicePercent: 80,
-    startCommand: '',
+    startPercentage: 80,
+    javaCommand: '',
     customJvmFlags: [],
     properties: [],
   },
@@ -35,29 +37,38 @@ const { handleSubmit, errors, defineField, isSubmitting, resetForm } = useForm({
 const [name, nameProps] = defineField('name')
 const [platform, platformProps] = defineField('platform')
 const [platformVersion, platformVersionProps] = defineField('platformVersion')
-const [minOnlineCount, minOnlineCountProps] = defineField('minOnlineCount')
-const [maxOnlineCount, maxOnlineCountProps] = defineField('maxOnlineCount')
+const [minServices, minServicesProps] = defineField('minServices')
+const [maxServices, maxServicesProps] = defineField('maxServices')
 const [maxPlayerCount, maxPlayerCountProps] = defineField('maxPlayerCount')
 const [maxMemory, maxMemoryProps] = defineField('maxMemory')
-const [isFallback, isFallbackProps] = defineField('fallback')
-const [isStatic, isStaticProps] = defineField('static')
-const [useModernVelocityForwarding, useModernVelocityForwardingProps]
-  = defineField('useModernVelocityForwarding')
+const [fallback, fallbackProps] = defineField('fallback')
+const [staticServices, staticServicesProps] = defineField('staticServices')
+const [useModernVelocityForwarding, useModernVelocityForwardingProps] = defineField('useModernVelocityForwarding')
 const [startPriority, startPriorityProps] = defineField('startPriority')
-const [newServicePercent, newServicePercentProps]
-  = defineField('newServicePercent')
-const [startCommand, startCommandProps] = defineField('startCommand')
+const [startPercentage, startPercentageProps] = defineField('startPercentage')
+const [javaCommand, javaCommandProps] = defineField('javaCommand')
 const [customJvmFlags, _customJvmFlagsProps] = defineField('customJvmFlags')
 const [properties, _propertiesProps] = defineField('properties')
 
+const platformParams = computed(() => ({
+  path: {
+    name: platform.value || '',
+  },
+}))
+
 const selectedPlatform = ref<string | null>(null)
 
+const { data: platformData } = useCloudQuery<GetApiV1PlatformsByNameResponse>(
+  getApiV1PlatformsByName,
+  'platformData',
+  platformParams,
+)
+
 const platformVersions = computed(() => {
-  if (!platform.value || !platforms.value)
+  if (!platform.value || !platformData.value)
     return []
 
-  const foundPlatform = platforms.value.find(p => p.name === platform.value)
-  return foundPlatform?.versions ?? []
+  return platformData.value.versions ?? []
 })
 
 watch(platform, () => {
@@ -65,10 +76,10 @@ watch(platform, () => {
 })
 
 const isProxyBased = computed(() => {
-  if (!platform.value || !platforms.value)
+  if (!platform.value || !platformData.value)
     return false
-  const foundPlatform = platforms.value.find(p => p.name === platform.value)
-  return foundPlatform?.proxy ?? false
+
+  return platformData.value.proxy ?? false
 })
 
 function addCustomJvmFlag(flag: string) {
@@ -86,7 +97,7 @@ function removeJvmFlag(flagToRemove: string) {
   )
 }
 
-function addCustomProperty(property: CloudProperty) {
+function addCustomProperty(property: ApiProperty) {
   const currentProps = properties.value || []
   if (!currentProps.some(p => p.name === property.name)) {
     properties.value = [...currentProps, property]
@@ -98,16 +109,30 @@ function removeProperty(index: number) {
   properties.value = currentProps
 }
 
-const { runAction } = useApiAction()
+const { mutate: createGroup, isPending: isCreating } = useMutation(postApiV1GroupsMutation())
+const router = useRouter();
 
 const onSubmit = handleSubmit(async (values) => {
-  const _result = await runAction(
-    () => $fetch<any>('/api/cloud/group', { method: 'POST', body: values }),
-    'The group has been successfully created.',
-  )
+  createGroup({
+    body: ref(values),
+  }, {
+    onSuccess: () => {
+      toast.success('The group has been successfully created.')
+      resetForm()
+      navigateTo('/groups')
+    },
+    onError: (error: any) => {
+      if (error?.data) {
+        toast.error(error.data.message)
+      }
+      else {
+        toast.error('Failed to create group')
+      }
+    },
+  })
 
   resetForm()
-  await navigateTo('/groups')
+  router.back()
 })
 </script>
 
@@ -169,8 +194,12 @@ const onSubmit = handleSubmit(async (values) => {
                     <SelectValue placeholder="Select a platform" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem v-for="platform in platforms" :key="platform.name" :value="platform.name">
-                      {{ platform.name }}
+                    <SelectItem
+                      v-for="platform in platforms"
+                      :key="platform.name || ''"
+                      :value="platform.name || ''"
+                    >
+                      {{ platform.name || 'N/A' }}
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -196,8 +225,8 @@ const onSubmit = handleSubmit(async (values) => {
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem v-for="version in platformVersions" :key="version.name" :value="version.name">
-                      {{ version.name }}
+                    <SelectItem v-for="version in platformVersions" :key="version.name" :value="version.name || ''">
+                      {{ version.name || 'N/A' }}
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -220,17 +249,17 @@ const onSubmit = handleSubmit(async (values) => {
                   How many services should always be online?
                 </Label>
                 <NumberField
-                  id="min-online" v-model="minOnlineCount" :default-value="1" :min="0"
-                  v-bind="minOnlineCountProps"
+                  id="min-online" v-model="minServices" :default-value="1" :min="0"
+                  v-bind="minServicesProps"
                 >
                   <NumberFieldContent>
                     <NumberFieldDecrement />
-                    <NumberFieldInput :class="{ 'border-destructive': errors.minOnlineCount }" />
+                    <NumberFieldInput :class="{ 'border-destructive': errors.minServices }" />
                     <NumberFieldIncrement />
                   </NumberFieldContent>
                 </NumberField>
-                <span v-if="errors.minOnlineCount" class="text-sm text-destructive">
-                  {{ errors.minOnlineCount }}
+                <span v-if="errors.minServices" class="text-sm text-destructive">
+                  {{ errors.minServices }}
                 </span>
               </div>
               <div class="flex flex-col gap-2">
@@ -239,17 +268,17 @@ const onSubmit = handleSubmit(async (values) => {
                   group?
                 </Label>
                 <NumberField
-                  id="max-services" v-model="maxOnlineCount" :default-value="100" :min="0"
-                  v-bind="maxOnlineCountProps"
+                  id="max-services" v-model="maxServices" :default-value="100" :min="0"
+                  v-bind="maxServicesProps"
                 >
                   <NumberFieldContent>
                     <NumberFieldDecrement />
-                    <NumberFieldInput :class="{ 'border-destructive': errors.maxOnlineCount }" />
+                    <NumberFieldInput :class="{ 'border-destructive': errors.maxServices }" />
                     <NumberFieldIncrement />
                   </NumberFieldContent>
                 </NumberField>
-                <span v-if="errors.maxOnlineCount" class="text-sm text-destructive">
-                  {{ errors.maxOnlineCount }}
+                <span v-if="errors.maxServices" class="text-sm text-destructive">
+                  {{ errors.maxServices }}
                 </span>
               </div>
               <div class="flex flex-col gap-2">
@@ -301,7 +330,7 @@ const onSubmit = handleSubmit(async (values) => {
               <Label class="font-medium" for="is-fallback">
                 Is this a fallback group? (Should be enabled for the Lobby)
               </Label>
-              <Switch id="is-fallback" v-model="isFallback" v-bind="isFallbackProps" />
+              <Switch id="is-fallback" v-model="fallback" v-bind="fallbackProps" />
               <span v-if="errors.fallback" class="text-sm text-destructive">
                 {{ errors.fallback }}
               </span>
@@ -311,9 +340,9 @@ const onSubmit = handleSubmit(async (values) => {
                 Are services in this group static? (Service files are not
                 deleted when stopped)
               </Label>
-              <Switch id="is-static" v-model="isStatic" v-bind="isStaticProps" />
-              <span v-if="errors.static" class="text-sm text-destructive">
-                {{ errors.static }}
+              <Switch id="is-static" v-model="staticServices" v-bind="staticServicesProps" />
+              <span v-if="errors.staticServices" class="text-sm text-destructive">
+                {{ errors.staticServices }}
               </span>
             </div>
             <div v-if="isProxyBased">
@@ -358,21 +387,21 @@ const onSubmit = handleSubmit(async (values) => {
                   this group be started? (-1 = disabled)
                 </Label>
                 <NumberField
-                  id="player-percentage" v-model="newServicePercent" :default-value="80" :min="-1"
-                  v-bind="newServicePercentProps"
+                  id="player-percentage" v-model="startPercentage" :default-value="80" :min="-1"
+                  v-bind="startPercentageProps"
                 >
                   <NumberFieldContent>
                     <NumberFieldDecrement />
                     <NumberFieldInput
                       :class="{
-                        'border-destructive': errors.newServicePercent,
+                        'border-destructive': errors.startPercentage,
                       }"
                     />
                     <NumberFieldIncrement />
                   </NumberFieldContent>
                 </NumberField>
-                <span v-if="errors.newServicePercent" class="text-sm text-destructive">
-                  {{ errors.newServicePercent }}
+                <span v-if="errors.startPercentage" class="text-sm text-destructive">
+                  {{ errors.startPercentage }}
                 </span>
               </div>
             </div>
@@ -387,17 +416,17 @@ const onSubmit = handleSubmit(async (values) => {
                         Java Command
                       </Label>
                       <Input
-                        id="java-command" v-model="startCommand"
-                        :class="{ 'border-destructive': errors.startCommand }" class="max-w-md" placeholder="java"
-                        v-bind="startCommandProps"
+                        id="java-command" v-model="javaCommand"
+                        :class="{ 'border-destructive': errors.javaCommand }" class="max-w-md" placeholder="java"
+                        v-bind="javaCommandProps"
                       />
                       <p class="text-xs text-muted-foreground">
                         The command used to start the Java process. You can
                         customize this if you want to use a different Java
                         version or why ever else you might need it.
                       </p>
-                      <span v-if="errors.startCommand" class="text-sm text-destructive">
-                        {{ errors.startCommand }}
+                      <span v-if="errors.javaCommand" class="text-sm text-destructive">
+                        {{ errors.javaCommand }}
                       </span>
                     </div>
                     <div class="flex flex-col gap-2">
@@ -448,11 +477,11 @@ const onSubmit = handleSubmit(async (values) => {
       </CardContent>
 
       <CardFooter class="border-t px-6 flex justify-end gap-3">
-        <Button variant="outline">
+        <Button variant="outline" @click="router.back()">
           Cancel
         </Button>
-        <Button :disabled="isSubmitting" type="submit" @click="onSubmit">
-          <Icon v-if="isSubmitting" class="mr-2 h-4 w-4 animate-spin" name="lucide:loader-2" />
+        <Button :disabled="isCreating" type="submit" @click="onSubmit">
+          <Icon v-if="isCreating" class="mr-2 h-4 w-4 animate-spin" name="lucide:loader-2" />
           Create Group
         </Button>
       </CardFooter>

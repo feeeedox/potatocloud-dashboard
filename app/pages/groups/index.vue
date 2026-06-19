@@ -1,19 +1,18 @@
 <script lang="ts" setup>
-import type { GetApiV1GroupsResponse } from '~/client/generated';
-import { getApiV1Groups } from '~/client/generated';
+import type { ApiGroup } from '~/client/generated';
 import { Button } from '~/components/ui/button'
 
-// const { groups } = useCloudGroups()
+const { groups, isPending } = useCloudGroups()
 
-// todo: write everything in hey-api...
-
-const { data, isPending } = useCloudQuery<GetApiV1GroupsResponse>(getApiV1Groups, 'groups')
-watch(data, (newData) => {
-  console.log('Groups data updated:', toRaw(newData))
+const proxies = computed<ApiGroup[]>(() => {
+  if (!groups.value) return []
+  return groups.value.filter(g => g.platform?.velocityBased)
 })
-//
-// const proxies = computed(() => groups.value.filter(g => g.platform.proxy))
-// const gameServers = computed(() => groups.value.filter(g => !g.platform.proxy))
+
+const gameServers = computed<ApiGroup[]>(() => {
+  if (!groups.value) return []
+  return groups.value.filter(g => !g.platform?.velocityBased)
+})
 </script>
 
 <template>
@@ -34,40 +33,40 @@ watch(data, (newData) => {
       </Button>
     </div>
 
-    <!--    <Separator class="bg-white/5" /> -->
+    <Separator class="bg-white/5" />
 
-    <!--    <section v-if="proxies.length > 0" class="flex flex-col gap-5"> -->
-    <!--      <div class="flex items-center gap-3"> -->
-    <!--        <div class="size-8 items-center flex justify-center rounded-lg bg-primary/10 border border-primary/20 shadow-inner"> -->
-    <!--          <Icon class="h-5 w-5 text-primary" name="lucide:network" /> -->
-    <!--        </div> -->
-    <!--        <h2 class="text-xl font-bold tracking-tight text-accent-foreground"> -->
-    <!--          Proxies -->
-    <!--        </h2> -->
-    <!--      </div> -->
+    <section v-if="proxies != null && proxies.length > 0" class="flex flex-col gap-5">
+      <div class="flex items-center gap-3">
+        <div class="size-8 items-center flex justify-center rounded-lg bg-primary/10 border border-primary/20 shadow-inner">
+          <Icon class="h-5 w-5 text-primary" name="lucide:network" />
+        </div>
+        <h2 class="text-xl font-bold tracking-tight text-accent-foreground">
+          Proxies
+        </h2>
+      </div>
 
-    <!--      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-4"> -->
-    <!--        <GroupsCard v-for="group in proxies" :key="group.name" :group="group" is-proxy /> -->
-    <!--      </div> -->
-    <!--    </section> -->
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-4">
+        <GroupsCard v-for="group in proxies" :key="group.name" :group="group" is-proxy />
+      </div>
+    </section>
 
-    <!--    <section v-if="gameServers.length > 0" class="flex flex-col gap-5"> -->
-    <!--      <div class="flex items-center gap-3"> -->
-    <!--        <div class="size-8 items-center flex justify-center rounded-lg bg-emerald-500/10 border border-emerald-500/20 shadow-inner"> -->
-    <!--          <Icon class="h-5 w-5 text-emerald-500" name="lucide:server" /> -->
-    <!--        </div> -->
-    <!--        <h2 class="text-xl font-bold tracking-tight text-accent-foreground"> -->
-    <!--          Game Servers -->
-    <!--        </h2> -->
-    <!--      </div> -->
+    <section v-if="gameServers != null && gameServers.length > 0" class="flex flex-col gap-5">
+      <div class="flex items-center gap-3">
+        <div class="size-8 items-center flex justify-center rounded-lg bg-emerald-500/10 border border-emerald-500/20 shadow-inner">
+          <Icon class="h-5 w-5 text-emerald-500" name="lucide:server" />
+        </div>
+        <h2 class="text-xl font-bold tracking-tight text-accent-foreground">
+          Game Servers
+        </h2>
+      </div>
 
-    <!--      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-4"> -->
-    <!--        <GroupsCard v-for="group in gameServers" :key="group.name" :group="group" /> -->
-    <!--      </div> -->
-    <!--    </section> -->
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-4">
+        <GroupsCard v-for="group in gameServers" :key="group.name" :group="group" />
+      </div>
+    </section>
 
-    <!--    <div v-if="pending" class="flex justify-center py-20 text-muted-foreground"> -->
-    <!--      <Icon class="h-10 w-10 animate-spin" name="lucide:loader-2" /> -->
-    <!--    </div> -->
+    <div v-if="isPending" class="flex justify-center py-20 text-muted-foreground">
+      <Icon class="h-10 w-10 animate-spin" name="lucide:loader-2" />
+    </div>
   </div>
 </template>

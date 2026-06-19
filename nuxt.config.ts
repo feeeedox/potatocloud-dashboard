@@ -11,7 +11,9 @@ export default defineNuxtConfig({
     ],
     optimizeDeps: {
       include: [
+        '@iconify/vue',
         '@number-flow/vue',
+        '@tanstack/vue-table',
         '@unovis/ts',
         '@unovis/vue',
         '@vee-validate/zod',

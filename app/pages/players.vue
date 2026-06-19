@@ -60,7 +60,7 @@ const { players } = useCloudPlayers()
 
             <TableCell>
               <Badge class="font-medium" variant="secondary">
-                {{ player.connectedServerName }}
+                {{ player.serverName }}
               </Badge>
             </TableCell>
 

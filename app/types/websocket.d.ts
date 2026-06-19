@@ -1,4 +1,5 @@
-import type { CloudGroup, CloudPlayer, CloudService, CloudServiceStats } from '~/types/cloud'
+import type { ApiPlayer } from '~/client/generated'
+import type { CloudGroup, CloudService, CloudServiceStats } from '~/types/cloud'
 
 export interface ScreenLogEvent {
   screenName: string
@@ -41,8 +42,8 @@ export interface WsEventMap {
   'screen:list': ScreenListResponse
   'service_update': CloudService
 
-  'player_update': CloudPlayer[]
-  'groups_update': CloudGroup[]
+  'player_update': ApiPlayer[]
+  'groups_update': ApiGroup[]
   'group_details': CloudGroup
   'stats_update': CloudServiceStats
   'service_updates': CloudService[]

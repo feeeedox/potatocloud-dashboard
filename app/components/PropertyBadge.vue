@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import type { CloudProperty } from '~/types/cloud'
+import type { ApiProperty } from '~/client/generated';
 
 defineProps<{
-  property: CloudProperty
+  property: ApiProperty
   hideRemove?: boolean
 }>()
 

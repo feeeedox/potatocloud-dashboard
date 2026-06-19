@@ -1,86 +1,72 @@
 <script lang="ts" setup>
-import type { CloudGroup, CloudPlatform, CloudProperty } from '~/types/cloud'
+import type { GetApiV1GroupsByGroupNameResponse, GroupUpdateRequest } from '~/client/generated';
+import type { CloudProperty } from '~/types/cloud'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
+import { toast } from 'vue-sonner'
+import { getApiV1GroupsByGroupName } from '~/client/generated';
+import { putApiV1GroupsByGroupNameMutation } from '~/client/generated/@tanstack/vue-query.gen';
 import { updateGroupSchema } from '~/lib/schemas'
 
 const route = useRoute()
 const groupId = route.params.id as string
+const router = useRouter();
 
-const { data: platforms } = await useFetch<CloudPlatform[]>(
-  '/api/cloud/platform',
+const { data: groupObject } = useCloudQuery<GetApiV1GroupsByGroupNameResponse>(
+  getApiV1GroupsByGroupName,
+  'groupDetails',
   {
-    default: () => [],
+    path: {
+      groupName: groupId,
+    },
   },
 )
 
-const { data: groupDetails } = await useFetch(`/api/cloud/group/${groupId}`, {
-  default: () => null,
-})
-
-const groupObject = groupDetails.value as CloudGroup
-
-const { handleSubmit, errors, defineField, isSubmitting, resetForm } = useForm({
+const { handleSubmit, errors, defineField, resetForm } = useForm<GroupUpdateRequest>({
   validationSchema: toTypedSchema(updateGroupSchema),
   initialValues: {
-    name: groupObject.name,
-    serviceTemplates: groupObject.serviceTemplates,
-    platform: groupObject.platform.name,
-    platformVersion: groupObject.platformVersion.name,
-    minOnlineCount: groupObject.minOnlineCount,
-    maxOnlineCount: groupObject.maxOnlineCount,
-    maxPlayerCount: groupObject.maxPlayerCount,
-    maxMemory: groupObject.maxMemory,
-    fallback: groupObject.fallback,
-    static: groupObject.static,
-    useModernVelocityForwarding: groupObject.useModernVelocityForwarding,
-    startPriority: groupObject.startPriority,
-    newServicePercent: groupObject.newServicePercent,
-    startCommand: groupObject.javaCommand,
-    customJvmFlags: groupObject.customJvmFlags,
-    properties: groupObject.properties,
+    customJvmFlags: [],
+    maxPlayers: 0,
+    maxMemory: 0,
+    minServices: 0,
+    maxServices: 0,
+    fallback: false,
+    startPriority: 0,
+    startPercentage: 0,
+    templates: [],
+    properties: [],
   },
 })
 
-const [serviceTemplates, serviceTemplatesProps]
-  = defineField('serviceTemplates')
-const [platform, platformProps] = defineField('platform')
-const [platformVersion, platformVersionProps] = defineField('platformVersion')
-const [minOnlineCount, minOnlineCountProps] = defineField('minOnlineCount')
-const [maxOnlineCount, maxOnlineCountProps] = defineField('maxOnlineCount')
-const [maxPlayerCount, maxPlayerCountProps] = defineField('maxPlayerCount')
-const [maxMemory, maxMemoryProps] = defineField('maxMemory')
-const [fallback, fallbackProps] = defineField('fallback')
-const [isStatic, staticProps] = defineField('static')
-const [useModernVelocityForwarding, useModernVelocityForwardingProps]
-  = defineField('useModernVelocityForwarding')
-const [startPriority, startPriorityProps] = defineField('startPriority')
-const [newServicePercent, newServicePercentProps]
-  = defineField('newServicePercent')
-const [startCommand, startCommandProps] = defineField('startCommand')
+watch(groupObject, (newData) => {
+  if (newData) {
+    resetForm({
+      values: {
+        customJvmFlags: newData.customJvmFlags ?? [],
+        maxPlayers: newData.maxPlayers ?? 0,
+        maxMemory: newData.maxMemory ?? 0,
+        minServices: newData.minServices ?? 0,
+        maxServices: newData.maxServices ?? 0,
+        fallback: newData.fallback ?? false,
+        startPriority: newData.startPriority ?? 0,
+        startPercentage: newData.startPercentage ?? 0,
+        templates: newData.templates ?? [],
+        properties: newData.properties ?? [],
+      },
+    })
+  }
+}, { immediate: true })
+
 const [customJvmFlags, _customJvmFlagsProps] = defineField('customJvmFlags')
+const [maxPlayers, maxPlayersProps] = defineField('maxPlayers')
+const [maxMemory, maxMemoryProps] = defineField('maxMemory')
+const [minServices, minServicesProps] = defineField('minServices')
+const [maxServices, maxServicesProps] = defineField('maxServices')
+const [fallback, fallbackProps] = defineField('fallback')
+const [startPriority, startPriorityProps] = defineField('startPriority')
+const [startPercentage, startPercentageProps] = defineField('startPercentage')
+const [templates, templatesProps] = defineField('templates')
 const [properties, _propertiesProps] = defineField('properties')
-
-const selectedPlatform = ref<string | null>(null)
-
-const platformVersions = computed(() => {
-  if (!platform.value || !platforms.value)
-    return []
-
-  const foundPlatform = platforms.value.find(p => p.name === platform.value)
-  return foundPlatform?.versions ?? []
-})
-
-watch(platform, () => {
-  platformVersion.value = ''
-})
-
-const isProxyBased = computed(() => {
-  if (!platform.value || !platforms.value)
-    return false
-  const foundPlatform = platforms.value.find(p => p.name === platform.value)
-  return foundPlatform?.proxy ?? false
-})
 
 function addCustomJvmFlag(flag: string) {
   const trimmedFlag = flag.trim()
@@ -109,20 +95,32 @@ function removeProperty(index: number) {
   properties.value = currentProps
 }
 
-const { runAction } = useApiAction()
+const { mutate: updateGroup, isPending: isUpdating } = useMutation(putApiV1GroupsByGroupNameMutation())
 
 const onSubmit = handleSubmit(async (values) => {
-  await runAction(
-    () =>
-      $fetch<any>(`/api/cloud/group/${groupId}/update`, {
-        method: 'POST',
-        body: values,
-      }),
-    'The group has been successfully updated.',
+  updateGroup({
+    path: {
+      groupName: groupId,
+    },
+    body: ref(values),
+  },
+  {
+    onSuccess: () => {
+      toast.success('Group updated successfully')
+    },
+    onError: (error: any) => {
+      if (error?.data) {
+        toast.error(error.data.message)
+      }
+      else {
+        toast.error('Failed to update group')
+      }
+    },
+  },
   )
 
   resetForm()
-  await navigateTo('/groups')
+  router.back()
 })
 </script>
 
@@ -142,7 +140,11 @@ const onSubmit = handleSubmit(async (values) => {
 
     <Separator />
 
-    <Card>
+    <div v-if="!groupObject" class="flex justify-center py-20 text-muted-foreground">
+      <Icon class="h-10 w-10 animate-spin" name="lucide:loader-2" />
+    </div>
+
+    <Card v-if="groupObject">
       <CardHeader>
         <CardTitle>Group Configuration</CardTitle>
         <CardDescription>
@@ -165,14 +167,14 @@ const onSubmit = handleSubmit(async (values) => {
                 <Label class="font-medium" for="group-name">
                   Service Templates
                 </Label>
-                <TagsInput v-model="serviceTemplates" placeholder="new-template" v-bind="serviceTemplatesProps" />
+                <TagsInput v-model="templates" placeholder="new-template" v-bind="templatesProps" />
                 <p class="text-xs text-muted-foreground">
                   The service templates that are used to merge existing data
                   (e.g. worlds, plugins) when starting new services in this
                   group.
                 </p>
-                <span v-if="errors.serviceTemplates" class="text-sm text-destructive">
-                  {{ errors.serviceTemplates }}
+                <span v-if="errors.templates" class="text-sm text-destructive">
+                  {{ errors.templates }}
                 </span>
               </div>
             </div>
@@ -189,43 +191,26 @@ const onSubmit = handleSubmit(async (values) => {
                   <Label class="font-medium" for="platform">
                     Which platform should be used?
                   </Label>
-                  <Select id="platform" v-model="platform" disabled v-bind="platformProps">
-                    <SelectTrigger :class="{ 'border-destructive': errors.platform }">
-                      <SelectValue placeholder="Select a platform" />
+                  <Select id="platform" disabled>
+                    <SelectTrigger>
+                      <SelectValue
+                        :placeholder="groupObject.platform?.name || 'N/A'"
+                      />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem v-for="platform in platforms" :key="platform.name" :value="platform.name">
-                        {{ platform.name }}
-                      </SelectItem>
-                    </SelectContent>
                   </Select>
-                  <span v-if="errors.platform" class="text-sm text-destructive">
-                    {{ errors.platform }}
-                  </span>
                 </div>
 
                 <div class="flex flex-col gap-2">
                   <Label class="font-medium" for="platform-version">
                     Which version of the platform?
                   </Label>
-                  <Select id="platform-version" v-model="platformVersion" disabled v-bind="platformVersionProps">
-                    <SelectTrigger :class="{ 'border-destructive': errors.platformVersion }">
+                  <Select id="platform-version" disabled>
+                    <SelectTrigger>
                       <SelectValue
-                        :placeholder="selectedPlatform
-                          ? 'Select a version'
-                          : 'Select a platform first'
-                        "
+                        :placeholder="groupObject.platformVersion?.name || 'N/A'"
                       />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem v-for="version in platformVersions" :key="version.name" :value="version.name">
-                        {{ version.name }}
-                      </SelectItem>
-                    </SelectContent>
                   </Select>
-                  <span v-if="errors.platformVersion" class="text-sm text-destructive">
-                    {{ errors.platformVersion }}
-                  </span>
                 </div>
               </div>
             </div>
@@ -242,17 +227,17 @@ const onSubmit = handleSubmit(async (values) => {
                     How many services should always be online?
                   </Label>
                   <NumberField
-                    id="min-online" v-model="minOnlineCount" :default-value="1" :min="0"
-                    v-bind="minOnlineCountProps"
+                    id="min-online" v-model="minServices" :default-value="1" :min="0"
+                    v-bind="minServicesProps"
                   >
                     <NumberFieldContent>
                       <NumberFieldDecrement />
-                      <NumberFieldInput :class="{ 'border-destructive': errors.minOnlineCount }" />
+                      <NumberFieldInput :class="{ 'border-destructive': errors.minServices }" />
                       <NumberFieldIncrement />
                     </NumberFieldContent>
                   </NumberField>
-                  <span v-if="errors.minOnlineCount" class="text-sm text-destructive">
-                    {{ errors.minOnlineCount }}
+                  <span v-if="errors.minServices" class="text-sm text-destructive">
+                    {{ errors.minServices }}
                   </span>
                 </div>
                 <div class="flex flex-col gap-2">
@@ -261,17 +246,17 @@ const onSubmit = handleSubmit(async (values) => {
                     group?
                   </Label>
                   <NumberField
-                    id="max-services" v-model="maxOnlineCount" :default-value="100" :min="0"
-                    v-bind="maxOnlineCountProps"
+                    id="max-services" v-model="maxServices" :default-value="100" :min="0"
+                    v-bind="maxServicesProps"
                   >
                     <NumberFieldContent>
                       <NumberFieldDecrement />
-                      <NumberFieldInput :class="{ 'border-destructive': errors.maxOnlineCount }" />
+                      <NumberFieldInput :class="{ 'border-destructive': errors.maxServices }" />
                       <NumberFieldIncrement />
                     </NumberFieldContent>
                   </NumberField>
-                  <span v-if="errors.maxOnlineCount" class="text-sm text-destructive">
-                    {{ errors.maxOnlineCount }}
+                  <span v-if="errors.maxServices" class="text-sm text-destructive">
+                    {{ errors.maxServices }}
                   </span>
                 </div>
                 <div class="flex flex-col gap-2">
@@ -280,17 +265,17 @@ const onSubmit = handleSubmit(async (values) => {
                     group?
                   </Label>
                   <NumberField
-                    id="max-players" v-model="maxPlayerCount" :default-value="100" :min="0"
-                    v-bind="maxPlayerCountProps"
+                    id="max-players" v-model="maxPlayers" :default-value="100" :min="0"
+                    v-bind="maxPlayersProps"
                   >
                     <NumberFieldContent>
                       <NumberFieldDecrement />
-                      <NumberFieldInput :class="{ 'border-destructive': errors.maxPlayerCount }" />
+                      <NumberFieldInput :class="{ 'border-destructive': errors.maxPlayers }" />
                       <NumberFieldIncrement />
                     </NumberFieldContent>
                   </NumberField>
-                  <span v-if="errors.maxPlayerCount" class="text-sm text-destructive">
-                    {{ errors.maxPlayerCount }}
+                  <span v-if="errors.maxPlayers" class="text-sm text-destructive">
+                    {{ errors.maxPlayers }}
                   </span>
                 </div>
                 <div class="flex flex-col gap-2">
@@ -333,26 +318,7 @@ const onSubmit = handleSubmit(async (values) => {
                   Are services in this group static? (Service files are not
                   deleted when stopped)
                 </Label>
-                <Switch id="is-static" v-model="isStatic" disabled v-bind="staticProps" />
-                <span v-if="errors.static" class="text-sm text-destructive">
-                  {{ errors.static }}
-                </span>
-              </div>
-              <div v-if="isProxyBased">
-                <div class="flex flex-col gap-2">
-                  <Label class="font-medium" for="is-default-proxy">
-                    Do you want to use Velocity modern forwarding? Modern
-                    forwarding is more secure but will break support for
-                    versions below 1.13
-                  </Label>
-                  <Switch
-                    id="is-default-proxy" v-model="useModernVelocityForwarding"
-                    v-bind="useModernVelocityForwardingProps"
-                  />
-                  <span v-if="errors.useModernVelocityForwarding" class="text-sm text-destructive">
-                    {{ errors.useModernVelocityForwarding }}
-                  </span>
-                </div>
+                <Switch id="is-static" :checked="groupObject.staticServices" disabled />
               </div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="flex flex-col gap-2">
@@ -380,21 +346,21 @@ const onSubmit = handleSubmit(async (values) => {
                     this group be started? (-1 = disabled)
                   </Label>
                   <NumberField
-                    id="player-percentage" v-model="newServicePercent" :default-value="80" :min="-1"
-                    v-bind="newServicePercentProps"
+                    id="player-percentage" v-model="startPercentage" :default-value="80" :min="-1"
+                    v-bind="startPercentageProps"
                   >
                     <NumberFieldContent>
                       <NumberFieldDecrement />
                       <NumberFieldInput
                         :class="{
-                          'border-destructive': errors.newServicePercent,
+                          'border-destructive': errors.startPercentage,
                         }"
                       />
                       <NumberFieldIncrement />
                     </NumberFieldContent>
                   </NumberField>
-                  <span v-if="errors.newServicePercent" class="text-sm text-destructive">
-                    {{ errors.newServicePercent }}
+                  <span v-if="errors.startPercentage" class="text-sm text-destructive">
+                    {{ errors.startPercentage }}
                   </span>
                 </div>
               </div>
@@ -409,18 +375,15 @@ const onSubmit = handleSubmit(async (values) => {
                           Java Command
                         </Label>
                         <Input
-                          id="java-command" v-model="startCommand"
-                          :class="{ 'border-destructive': errors.startCommand }" class="max-w-md" disabled
-                          placeholder="java" v-bind="startCommandProps"
+                          id="java-command"
+                          :placeholder="groupObject.javaCommand" class="max-w-md"
+                          disabled
                         />
                         <p class="text-xs text-muted-foreground">
                           The command used to start the Java process. You can
                           customize this if you want to use a different Java
                           version or why ever else you might need it.
                         </p>
-                        <span v-if="errors.startCommand" class="text-sm text-destructive">
-                          {{ errors.startCommand }}
-                        </span>
                       </div>
                       <div class="flex flex-col gap-2">
                         <Label class="font-medium" for="group-name">
@@ -472,11 +435,11 @@ const onSubmit = handleSubmit(async (values) => {
       </CardContent>
 
       <CardFooter class="border-t px-6 flex justify-end gap-3">
-        <Button variant="outline">
+        <Button variant="outline" @click="router.back()">
           Cancel
         </Button>
-        <Button :disabled="isSubmitting" type="submit" @click="onSubmit">
-          <Icon v-if="isSubmitting" class="mr-2 h-4 w-4 animate-spin" name="lucide:loader-2" />
+        <Button :disabled="isUpdating" type="submit" @click="onSubmit">
+          <Icon v-if="isUpdating" class="mr-2 h-4 w-4 animate-spin" name="lucide:loader-2" />
           Update Group
         </Button>
       </CardFooter>

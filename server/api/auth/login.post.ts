@@ -29,6 +29,7 @@ export default defineEventHandler(async (event) => {
       sub: String(user.id),
       username: user.username,
     },
+    // eslint-disable-next-line node/prefer-global/process
     process.env.JWT_SECRET!,
     { expiresIn: '8h', algorithm: 'HS256' },
   )
@@ -40,6 +41,8 @@ export default defineEventHandler(async (event) => {
     user: newUser,
     backendToken,
     loggedInAt: new Date(),
+  }, {
+    maxAge: 8 * 60 * 60, // 8 hours in seconds
   })
 
   return {
