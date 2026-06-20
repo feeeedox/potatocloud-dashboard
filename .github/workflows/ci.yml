@@ -29,7 +29,7 @@ jobs:
           DATABASE_URL: 'mysql://root:root@localhost:3306/dummy'
 
       - name: Lint
-        run: bun run lint --fix
+        run: bun lint
 
       - name: Build Nuxt
-        run: bun run build
+        run: bun nuxt build
