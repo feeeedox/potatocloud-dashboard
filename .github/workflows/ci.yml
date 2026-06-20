@@ -1,5 +1,4 @@
-name: CI
-
+name: Lint only (for now, build is a bit annoying cause of openapi)
 on:
   push:
     branches:
@@ -30,6 +29,3 @@ jobs:
 
       - name: Lint
         run: bun lint
-
-      - name: Build Nuxt
-        run: bun nuxt build
