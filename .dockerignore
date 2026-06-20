@@ -1,0 +1,9 @@
+# .dockerignore
+node_modules
+.output
+.nuxt
+dist
+.env
+.git
+app/client
+prisma/generated

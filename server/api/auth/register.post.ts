@@ -1,4 +1,5 @@
 import { prisma } from '#server/utils/db'
+import jwt from 'jsonwebtoken'
 
 export default defineEventHandler(async (event) => {
   const userCount = await prisma.user.count()
@@ -13,7 +14,6 @@ export default defineEventHandler(async (event) => {
   await clearUserSession(event)
 
   const body = await readBody(event)
-
   const { username, password } = body
 
   const existingUser = await prisma.user.findUnique({
@@ -23,14 +23,13 @@ export default defineEventHandler(async (event) => {
   })
 
   if (existingUser) {
-    return createError({
+    throw createError({
       statusCode: 400,
       statusMessage: 'Username already exists',
     })
   }
 
   const isFirstUser = true
-
   const hashedPassword = await hashPassword(password)
 
   const createdUser = await prisma.user.create({
@@ -42,6 +41,16 @@ export default defineEventHandler(async (event) => {
     },
   })
 
+  const backendToken = jwt.sign(
+    {
+      sub: String(createdUser.id),
+      username: createdUser.username,
+    },
+    // eslint-disable-next-line node/prefer-global/process
+    process.env.JWT_SECRET!,
+    { expiresIn: '8h', algorithm: 'HS256' },
+  )
+
   const user = {
     id: createdUser.id,
     username: createdUser.username,
@@ -50,8 +59,15 @@ export default defineEventHandler(async (event) => {
     sessionVersion: createdUser.sessionVersion,
   }
 
-  return await setUserSession(event, {
+  await setUserSession(event, {
     user,
+    backendToken,
     loggedInAt: new Date(),
+  }, {
+    maxAge: 8 * 60 * 60,
   })
+
+  return {
+    user,
+  }
 })

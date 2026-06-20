@@ -1,7 +1,11 @@
 import { defineConfig } from '@hey-api/openapi-ts';
+import { loadEnv } from 'vite';
+
+// eslint-disable-next-line node/prefer-global/process
+const { OPENAPI_ENDPOINT } = loadEnv(process.env.NODE_ENV || 'development', process.cwd(), '');
 
 export default defineConfig({
-  input: 'http://localhost:8080/openapi',
+  input: OPENAPI_ENDPOINT || '',
   output: {
     path: 'app/client/generated',
   },
