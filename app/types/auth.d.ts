@@ -1,6 +1,6 @@
 declare module '#auth-utils' {
   interface User {
-    id: number
+    id: number | string
     username: string
     avatar: string
     isAdmin: boolean

@@ -6,7 +6,7 @@ import { useWebSocket } from './useWebSocket'
 
 export function useCloudServiceStats() {
   const config = useRuntimeConfig()
-  const baseUrl = config.public.cloudBaseUrl
+  const baseUrl = config.public.wsBaseUrl
 
   const wsStats = ref<ApiServiceStats>()
   const status = ref<WsStatus>('connecting')
@@ -22,13 +22,13 @@ export function useCloudServiceStats() {
     }
   })
 
-  const ws = useWebSocket(`${baseUrl}/ws/stats/services`, {
+  const ws = useWebSocket(`${baseUrl}/ws/service-stats`, {
     onOpen: () => { status.value = 'connected' },
     onClose: () => { status.value = 'disconnected' },
     onError: () => { status.value = 'error' },
   })
 
-  ws.on('stats_update', (data) => {
+  ws.on('service_stats_update', (data) => {
     wsStats.value = data
   })
 

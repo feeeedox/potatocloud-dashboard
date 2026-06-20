@@ -6,7 +6,7 @@ import { useWebSocket } from './useWebSocket'
 
 export function useCloudPlayers() {
   const config = useRuntimeConfig()
-  const baseUrl = config.public.cloudBaseUrl
+  const baseUrl = config.public.wsBaseUrl
 
   const wsPlayers = ref<ApiPlayer[] | null>(null)
   const status = ref<WsStatus>('connecting')
@@ -17,13 +17,13 @@ export function useCloudPlayers() {
     return wsPlayers.value ?? httpPlayers.value ?? []
   })
 
-  const ws = useWebSocket(`${baseUrl}/ws/players/live`, {
+  const ws = useWebSocket(`${baseUrl}/ws/players`, {
     onOpen: () => { status.value = 'connected' },
     onClose: () => { status.value = 'disconnected' },
     onError: () => { status.value = 'error' },
   })
 
-  ws.on('player_update', (data) => {
+  ws.on('players_update', (data) => {
     wsPlayers.value = data
   })
 

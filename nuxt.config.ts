@@ -129,6 +129,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     cloudToken: process.env.CLOUD_TOKEN ?? '',
     public: {
+      wsBaseUrl: process.env.WS_BASE_URL ?? '',
       cloudBaseUrl: process.env.CLOUD_BASE_URL ?? '',
     },
   },

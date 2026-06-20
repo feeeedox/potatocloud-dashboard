@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
+import { getApiV1ServicesByNameStop } from '~/client/generated';
 
 const route = useRoute()
 const serviceId = computed(() => route.params.id as string)
@@ -7,16 +8,11 @@ const serviceId = computed(() => route.params.id as string)
 const loading = ref(true)
 
 async function stopService() {
-  try {
-    await $fetch(`/api/cloud/service/${serviceId.value}/stop`, {
-      method: 'POST',
-    })
-
-    window.location.reload()
-  }
-  catch (e) {
-    console.error('Stop failed', e)
-  }
+  getApiV1ServicesByNameStop({
+    path: {
+      name: serviceId.value,
+    },
+  })
 }
 
 function getStatusColor(statusObj: { [key: string]: unknown } | undefined) {
@@ -97,9 +93,7 @@ const { serviceData } = useCloudService(serviceId.value)
       </div>
     </div>
 
-    <div
-      class="grid grid-cols-1 gap-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4"
-    >
+    <div class="grid grid-cols-1 gap-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
       <Card class="@container/card">
         <CardHeader>
           <CardDescription class="flex items-center gap-1.5">

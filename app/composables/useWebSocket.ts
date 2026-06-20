@@ -44,16 +44,9 @@ export function useWebSocket(endpoint: string, options: UseWebSocketOptions = {}
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null
   let manualClose = false
 
-  async function buildUrl(base: string): Promise<string> {
-    try {
-      const { token } = await $fetch('/api/ws-token')
-      const sep = base.includes('?') ? '&' : '?'
-      return `${base}${sep}apiKey=${encodeURIComponent(token)}`
-    }
-    catch (error) {
-      console.error('[useWebsocket] Failed to get token: ', error)
-      throw new Error('Authentication required')
-    }
+  async function buildUrl(base: string): Promise<{ url: string, protocols: string[] }> {
+    const { token } = await $fetch('/api/ws-token')
+    return { url: base, protocols: ['bearer', token] }
   }
 
   async function connect() {
@@ -61,8 +54,8 @@ export function useWebSocket(endpoint: string, options: UseWebSocketOptions = {}
       return
 
     status.value = 'connecting'
-    const url = await buildUrl(endpoint)
-    ws = new WebSocket(url)
+    const { url, protocols } = await buildUrl(endpoint)
+    ws = new WebSocket(url, protocols)
 
     ws.onopen = () => {
       status.value = 'connected'

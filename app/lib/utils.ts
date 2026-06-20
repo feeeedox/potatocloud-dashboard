@@ -50,8 +50,10 @@ export function formatSecondsToTime(seconds: number) {
     parts.push(`${hours}h`)
   if (minutes > 0)
     parts.push(`${minutes}m`)
-  if (parts.length === 0)
-    parts.push(`${secs}s`)
+  if (parts.length === 0) {
+    const roundedSecs = Math.round(secs)
+    parts.push(`${roundedSecs}s`)
+  }
 
   return parts.join(' ')
 }

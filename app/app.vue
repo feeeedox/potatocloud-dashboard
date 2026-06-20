@@ -47,7 +47,7 @@ const dir = computed(() => textDirection.value === 'rtl' ? 'rtl' : 'ltr')
 <template>
   <Body class="overscroll-none antialiased bg-background text-foreground">
     <ConfigProvider :dir="dir">
-      <div id="app" class="relative" vaul-drawer-wrapper>
+      <div id="app" class="relative">
         <NuxtLayout>
           <NuxtPage />
         </NuxtLayout>

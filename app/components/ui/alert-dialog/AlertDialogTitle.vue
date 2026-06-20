@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 import type { AlertDialogTitleProps } from 'reka-ui'
 import type { HTMLAttributes } from 'vue'
 import { reactiveOmit } from '@vueuse/core'
@@ -12,9 +12,9 @@ const delegatedProps = reactiveOmit(props, 'class')
 
 <template>
   <AlertDialogTitle
+    :class="cn('text-lg font-semibold', props.class)"
     data-slot="alert-dialog-title"
     v-bind="delegatedProps"
-    :class="cn('text-lg font-semibold', props.class)"
   >
     <slot />
   </AlertDialogTitle>

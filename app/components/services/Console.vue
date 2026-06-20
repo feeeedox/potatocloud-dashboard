@@ -3,7 +3,7 @@ import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { getApiV1ScreensByNameLogs } from '~/client/generated';
 import { useWebSocket } from '~/composables/useWebSocket';
 
-interface ScreenLogDto {
+interface ScreenLogResponse {
   screenName: string
   line: string
 }
@@ -13,7 +13,7 @@ const props = defineProps<{
 }>()
 
 const config = useRuntimeConfig()
-const baseUrl = config.public.cloudBaseUrl
+const baseUrl = config.public.wsBaseUrl
 
 const MAX_RENDERED_LINES = 500
 
@@ -61,7 +61,7 @@ const ws = useWebSocket(`${baseUrl}/ws/screens/${props.screenName}`, {
   },
 })
 
-ws.on('screen:logs:batch', (eventData: ScreenLogDto) => {
+ws.on('service_screen_log', (eventData: ScreenLogResponse) => {
   if (eventData.screenName === props.screenName) {
     logs.value.push(colorizeLog(eventData.line));
     scrollToBottom();
@@ -283,7 +283,7 @@ onUnmounted(() => {
   border: 1px solid hsl(var(--border) / 0.5);
   background: #0d0d0d;
   min-height: 400px;
-  max-height: 600px;
+  height: 80vh;
   font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
 }
 
