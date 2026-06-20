@@ -4,28 +4,32 @@ on:
   push:
     branches:
       - master
-
   pull_request:
     branches:
       - master
 
 jobs:
-  lint:
+  lint-and-build:
     runs-on: ubuntu-latest
     steps:
       - id: checkout
         name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
-      - id: setup-ni
-        name: Setup
-        run: npm i -g @antfu/ni
+      - id: setup-bun
+        name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
 
       - id: install-deps
         name: Install dependencies
-        run: nci
+        run: bun install --frozen-lockfile
         env:
           DATABASE_URL: 'mysql://root:root@localhost:3306/dummy'
 
       - name: Lint
-        run: nr lint --fix
+        run: bun run lint --fix
+
+      - name: Build Nuxt
+        run: bun run build

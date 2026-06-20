@@ -97,7 +97,6 @@
   "overrides": {
     "nuxt": "4.4.7"
   },
-  "packageManager": "pnpm@10.34.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/feeeedox/potatocloud-dashboard.git"

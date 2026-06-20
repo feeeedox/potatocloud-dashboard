@@ -1,4 +1,4 @@
-import type { GetApiV1GroupsByGroupNameResponse } from '~/client/generated'
+import type { ApiGroup, GetApiV1GroupsByGroupNameResponse } from '~/client/generated'
 import type { WsStatus } from '~/types/websocket'
 import { computed, ref } from 'vue'
 import { getApiV1GroupsByGroupName } from '~/client/generated'
