@@ -6,7 +6,7 @@ import { useWebSocket } from './useWebSocket'
 
 export function useCloudGroupDetails(groupName: string) {
   const config = useRuntimeConfig()
-  const baseUrl = config.public.cloudBaseUrl
+  const baseUrl = config.public.wsBaseUrl
 
   const wsGroupData = ref<ApiGroup | null>(null)
   const status = ref<WsStatus>('connecting')
@@ -25,13 +25,13 @@ export function useCloudGroupDetails(groupName: string) {
     return wsGroupData.value ?? (httpGroupData.value as ApiGroup) ?? null
   })
 
-  const ws = useWebSocket(`${baseUrl}/ws/group-details?group=${groupName}`, {
+  const ws = useWebSocket(`${baseUrl}/ws/groups/${groupName}`, {
     onOpen: () => { status.value = 'connected' },
     onClose: () => { status.value = 'disconnected' },
     onError: () => { status.value = 'error' },
   })
 
-  ws.on('group_details', (data: ApiGroup) => {
+  ws.on('group_details_update', (data: ApiGroup) => {
     wsGroupData.value = data
   })
 

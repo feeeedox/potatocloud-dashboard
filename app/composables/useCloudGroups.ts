@@ -1,4 +1,4 @@
-import type { GetApiV1GroupsDetailsResponse } from '~/client/generated';
+import type { ApiGroup, GetApiV1GroupsDetailsResponse } from '~/client/generated';
 import type { WsStatus } from '~/types/websocket'
 import { ref } from 'vue'
 import { getApiV1GroupsDetails } from '~/client/generated';
@@ -6,7 +6,7 @@ import { useWebSocket } from './useWebSocket'
 
 export function useCloudGroups() {
   const config = useRuntimeConfig()
-  const baseUrl = config.public.cloudBaseUrl
+  const baseUrl = config.public.wsBaseUrl
 
   const wsGroups = ref<ApiGroup[] | null>(null)
   const status = ref<WsStatus>('connecting')

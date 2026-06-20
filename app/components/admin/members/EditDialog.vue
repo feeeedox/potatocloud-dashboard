@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import type { User } from '~/types'
 import { toTypedSchema } from '@vee-validate/zod'
-import { Loader2 } from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
 import { useApiAction } from '~/composables/useApiAction'
 import { userNameAvatarSchema } from '~/lib/schemas'
@@ -76,7 +75,6 @@ const onSubmit = handleSubmit(async (values) => {
             </Button>
           </DialogClose>
           <Button :disabled="isSubmitting" type="submit" @click="onSubmit">
-            <Loader2 v-if="isSubmitting" class="mr-2 h-4 w-4 animate-spin" />
             Update
           </Button>
         </DialogFooter>

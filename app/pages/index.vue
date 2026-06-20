@@ -1,15 +1,14 @@
 <script lang="ts" setup>
-import type { GetApiV1StatsSummaryResponse } from '~/client/generated';
 import NumberFlow from '@number-flow/vue'
-import { getApiV1StatsSummary } from '~/client/generated';
+import { useStatsSummary } from '~/composables/useStatsSummary';
 
-const { data } = useCloudQuery<GetApiV1StatsSummaryResponse>(getApiV1StatsSummary, `cloud-stats`)
+const { stats } = useStatsSummary()
 
 const dataCard = computed(() => ({
-  uptime: formatMillisToTime(Number(data.value?.uptime)) ?? '0s',
-  groups: data.value?.groups ?? 0,
-  services: data.value?.services ?? 0,
-  onlinePlayers: data.value?.playerCount ?? 0,
+  uptime: formatMillisToTime(Number(stats.value?.uptime)) ?? '0s',
+  groups: stats.value?.groups ?? 0,
+  services: stats.value?.services ?? 0,
+  onlinePlayers: stats.value?.playerCount ?? 0,
 }))
 
 const timeRange = ref('30d')

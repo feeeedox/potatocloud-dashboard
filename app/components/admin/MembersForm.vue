@@ -99,8 +99,7 @@ async function deleteMember(member: User) {
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction :disabled="loading" @click="deleteMember(member)">
-                      <Loader2 v-if="loading" class="mr-2 h-4 w-4 animate-spin" />
-                      <span v-else>Delete</span>
+                      <span v-if="!loading">Delete</span>
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

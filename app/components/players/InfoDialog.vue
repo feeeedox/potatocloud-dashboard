@@ -26,7 +26,7 @@ const fields = [
   <Dialog>
     <DialogTrigger>
       <Button size="sm" variant="ghost">
-        <Info class="mr-2 h-4 w-4" />
+        <Info class="h-4 w-4" />
         Details
       </Button>
     </DialogTrigger>
