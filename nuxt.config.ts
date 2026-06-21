@@ -3,7 +3,6 @@ import tailwindcss from '@tailwindcss/vite';
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   devtools: { enabled: true },
-
   css: ['~/assets/css/tailwind.css'],
   vite: {
     plugins: [
@@ -129,6 +128,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     cloudToken: process.env.CLOUD_TOKEN ?? '',
     public: {
+      restBaseUrl: process.env.REST_BASE_URL ?? '',
       wsBaseUrl: process.env.WS_BASE_URL ?? '',
       cloudBaseUrl: process.env.CLOUD_BASE_URL ?? '',
     },

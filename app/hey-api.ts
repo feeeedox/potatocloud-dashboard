@@ -2,7 +2,7 @@ import type { CreateClientConfig } from './client/generated/client.gen'
 
 export const createClientConfig: CreateClientConfig = config => ({
   ...config,
-  baseURL: 'http://localhost:8080',
+  baseURL: process.env.NUXT_PUBLIC_REST_BASE_URL || 'http://localhost:8080',
   async onRequest({ request, options }) {
     if (import.meta.server) return request
 
